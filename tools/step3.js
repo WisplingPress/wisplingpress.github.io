@@ -17,6 +17,9 @@
       const s = box('Shipping profile'); if (s && isOn(s)) { s.click(); await W(600); }
       if (!isOn(box('Hide in store')) || (s && isOn(box('Shipping profile')))) throw new Error('boxes');
       let dt = '';
+      const pubBtn = () => { const a = [...document.querySelectorAll('button')].filter(b => b.offsetParent && b.textContent.trim() === 'Publish'); return a[a.length - 1]; };
+      t0 = Date.now(); while ((!pubBtn() || pubBtn().disabled) && Date.now() - t0 < 25000) await W(1000);
+      if (!pubBtn() || pubBtn().disabled) { localStorage.setItem('__shreload', String(+(localStorage.getItem('__shreload') || 0) + 1)); location.reload(); return; }
       for (let tries = 0; tries < 3 && !/store\/products/.test(location.href); tries++) {
         const pbs = [...document.querySelectorAll('button')].filter(b => b.offsetParent && b.textContent.trim() === 'Publish'); if (pbs.length) pbs[pbs.length - 1].click();
         await W(3000);
