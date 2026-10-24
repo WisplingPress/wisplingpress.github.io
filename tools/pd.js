@@ -69,6 +69,9 @@ window.__pub = async function (key, kind) {
   const hide = cb.checked;
   if (!hide) return 'ERR hide not set ' + r1 + ' ' + r2;
   [...document.querySelectorAll('button')].find(b => b.offsetParent && b.textContent.trim() === 'Publish').click();
+  await W(3000);
+  const d = [...document.querySelectorAll('[role=dialog],pfy-dialog,.modal')].filter(e => e.offsetParent).pop();
+  const cf = d && [...d.querySelectorAll('button')].find(b => b.textContent.trim() === 'Confirm'); if (cf) cf.click();
   let t0 = Date.now(); while (!/store\/products/.test(location.href) && Date.now() - t0 < 20000) await W(500);
   return r1 + ' | ' + r2 + ' | hidden ' + hide + ' | ' + location.pathname;
 };
