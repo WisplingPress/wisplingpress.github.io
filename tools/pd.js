@@ -31,3 +31,44 @@ window.__pd = async function (key, opts = {}) {
   return JSON.stringify(res);
 };
 'pd ready';
+window.__PRICES = {
+  tee: [[['S','M','L','XL'],15.99],[['2XL'],17.49],[['3XL'],18.99],[['4XL','5XL'],19.49]],
+  hood: [[['S','M','L','XL'],36.49],[['2XL'],38.99],[['3XL','4XL','5XL'],40.99]],
+  hood_back: [[['S','M','L','XL','2XL'],34.99],[['3XL','4XL','5XL'],37.99]],
+};
+window.__setPrices = async function (groups) {
+  const W = ms => new Promise(r => setTimeout(r, ms));
+  [...document.querySelectorAll('button')].find(b => b.offsetParent && b.textContent.trim() === 'Detailed table view')?.click(); await W(2000);
+  const rowCb = size => { const lab = [...document.querySelectorAll('.size-group-header *')].find(e => e.children.length === 0 && e.textContent.trim() === size && e.offsetParent); if (!lab) return null; return lab.closest('.size-group-header').querySelector('[role=checkbox]'); };
+  const allCb = () => document.querySelector('pfa-all-variants-selection [role=checkbox]');
+  const out = [];
+  for (const [sizes, price] of groups) {
+    // clear selection
+    let a = allCb(); if (a.getAttribute('aria-checked') !== 'false') { a.click(); await W(500); }
+    a = allCb(); if (a.getAttribute('aria-checked') !== 'false') { a.click(); await W(500); }
+    for (const s of sizes) { const cb = rowCb(s); if (!cb) return 'ERR no size ' + s; if (cb.getAttribute('aria-checked') !== 'true') { cb.click(); await W(250); } }
+    [...document.querySelectorAll('button')].find(b => b.offsetParent && b.textContent.trim() === 'Edit price').click(); await W(1500);
+    const dlg = [...document.querySelectorAll('[role=dialog],pfy-dialog,.modal')].filter(e => e.offsetParent).pop();
+    const n = (dlg.innerText.match(/update price for (\d+) variants/) || [])[1];
+    const inp = dlg.querySelector('input[type=number]');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(inp, String(price)); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); await W(400);
+    [...dlg.querySelectorAll('button')].find(b => b.textContent.trim() === 'Apply').click(); await W(1500);
+    out.push(sizes.join('/') + '=' + price + ' (' + n + ')');
+  }
+  const txt = document.body.innerText.replace(/\n+/g, ' ');
+  const got = [...txt.matchAll(/check (S|M|L|XL|2XL|3XL|4XL|5XL) chevron_right Price: \$([\d.]+)/g)].map(m => m[1] + ':' + m[2]).join(',');
+  return out.join(' ; ') + ' => ' + got;
+};
+window.__pub = async function (key, kind) {
+  const W = ms => new Promise(r => setTimeout(r, ms));
+  const r1 = await window.__pd(key, { dry: true });
+  const r2 = await window.__setPrices(window.__PRICES[kind]);
+  const lab = [...document.querySelectorAll('*')].filter(e => e.children.length === 0 && e.textContent.trim() === 'Hide in store' && e.offsetParent).pop();
+  let c = lab; for (let i = 0; i < 5 && c && !c.querySelector('input[type=checkbox]'); i++) c = c.parentElement;
+  const cb = c.querySelector('input[type=checkbox]'); if (!cb.checked) { cb.click(); await W(600); }
+  const hide = cb.checked;
+  if (!hide) return 'ERR hide not set ' + r1 + ' ' + r2;
+  [...document.querySelectorAll('button')].find(b => b.offsetParent && b.textContent.trim() === 'Publish').click();
+  let t0 = Date.now(); while (!/store\/products/.test(location.href) && Date.now() - t0 < 20000) await W(500);
+  return r1 + ' | ' + r2 + ' | hidden ' + hide + ' | ' + location.pathname;
+};
