@@ -56,7 +56,7 @@ window.__setPrices = async function (groups) {
     out.push(sizes.join('/') + '=' + price + ' (' + n + ')');
   }
   const txt = document.body.innerText.replace(/\n+/g, ' ');
-  const got = [...txt.matchAll(/check (S|M|L|XL|2XL|3XL|4XL|5XL) chevron_right Price: \$([\d.]+)/g)].map(m => m[1] + ':' + m[2]).join(',');
+  const got = [...txt.matchAll(/(?:^| )(S|M|L|XL|2XL|3XL|4XL|5XL) chevron_right Price: \$([\d.]+)/g)].map(m => m[1] + ':' + m[2]).join(',');
   return out.join(' ; ') + ' => ' + got;
 };
 window.__pub = async function (key, kind) {
