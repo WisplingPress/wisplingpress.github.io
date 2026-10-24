@@ -18,9 +18,13 @@ window.__pd = async function (key, opts = {}) {
   const lab = [...document.querySelectorAll('*')].filter(e => e.children.length === 0 && e.textContent.trim() === 'Tags' && e.offsetParent).pop();
   let c = lab; for (let i = 0; i < 5 && c && !c.querySelector('[role=checkbox]'); i++) c = c.parentElement;
   const cb = c && c.querySelector('[role=checkbox]'); if (cb && cb.getAttribute('aria-checked') === 'false') { cb.click(); await W(400); }
+  // do not let Printify overwrite our edited Etsy delivery profiles
+  const sl = [...document.querySelectorAll('*')].filter(e => e.children.length === 0 && e.textContent.trim() === 'Shipping profile' && e.offsetParent && e.closest('pfy-checkbox, label, [class*=detail]')).pop();
+  let sc = sl; for (let i = 0; i < 5 && sc && !sc.querySelector('[role=checkbox]'); i++) sc = sc.parentElement;
+  const scb = sc && sc.querySelector('[role=checkbox]'); if (opts.keepShip !== true && scb && scb.getAttribute('aria-checked') === 'true') { scb.click(); await W(400); }
   const txt = document.body.innerText;
   const nTags = (txt.match(/(\d+) left/) || [])[1];
-  const res = { key, title: title.value.slice(0, 50), tagsLeft: nTags, tagsPub: cb && cb.getAttribute('aria-checked') };
+  const res = { key, title: title.value.slice(0, 50), tagsLeft: nTags, tagsPub: cb && cb.getAttribute('aria-checked'), shipPub: scb && scb.getAttribute('aria-checked') };
   if (opts.dry) return JSON.stringify(res);
   [...document.querySelectorAll('button')].find(b => b.offsetParent && b.textContent.trim() === 'Save as draft').click();
   await W(4000);
