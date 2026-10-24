@@ -16,12 +16,14 @@
       const h = box('Hide in store'); if (!isOn(h)) { h.click(); await W(600); }
       const s = box('Shipping profile'); if (s && isOn(s)) { s.click(); await W(600); }
       if (!isOn(box('Hide in store')) || (s && isOn(box('Shipping profile')))) throw new Error('boxes');
-      const pbs = [...document.querySelectorAll('button')].filter(b => b.offsetParent && b.textContent.trim() === 'Publish'); pbs[pbs.length - 1].click();
-      await W(3000);
-      const d = [...document.querySelectorAll('[role=dialog],pfy-dialog,.modal')].filter(e => e.offsetParent).pop();
-      const dt = d ? d.innerText.replace(/\s+/g, ' ').slice(0, 120) : '';
-      const cf = d && [...d.querySelectorAll('button')].find(b => /^(Confirm|Publish)$/.test(b.textContent.trim())); if (cf) cf.click();
-      t0 = Date.now(); while (!/store\/products/.test(location.href) && Date.now() - t0 < 25000) await W(500);
+      let dt = '';
+      for (let tries = 0; tries < 3 && !/store\/products/.test(location.href); tries++) {
+        const pbs = [...document.querySelectorAll('button')].filter(b => b.offsetParent && b.textContent.trim() === 'Publish'); if (pbs.length) pbs[pbs.length - 1].click();
+        await W(3000);
+        const d = [...document.querySelectorAll('[role=dialog],pfy-dialog,.modal')].filter(e => e.offsetParent).pop();
+        if (d) { dt = d.innerText.replace(/\s+/g, ' ').slice(0, 120); const cf = [...d.querySelectorAll('button')].find(b => /^(Confirm|Publish)$/.test(b.textContent.trim())); if (cf) cf.click(); }
+        t0 = Date.now(); while (!/store\/products/.test(location.href) && Date.now() - t0 < 12000) await W(500);
+      }
       if (!/store\/products/.test(location.href)) throw new Error('publish did not go through');
       r = 'ok hidden | ' + dt + ' | ' + location.pathname;
     } catch (e) { r = 'ERR ' + e.message; }
