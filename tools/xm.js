@@ -26,3 +26,28 @@ window.__setP = async function (groups) {
 window.__box = function (label) { const lab = [...document.querySelectorAll('*')].filter(e => e.children.length === 0 && e.textContent.trim().replace(/\*$/, '') === label && e.offsetParent).pop(); let c = lab; for (let i = 0; i < 6 && c && !c.querySelector('[role=checkbox]'); i++) c = c.parentElement; return c && c.querySelector('[role=checkbox]'); };
 window.__boxes = function () { return ['Hide in store', 'Product title', 'Description', 'Mockups', 'Colors, sizes, prices, and SKUs', 'Tags', 'Shipping profile'].map(l => { const b = window.__box(l); return l + ':' + (b ? b.getAttribute('aria-checked') : 'missing'); }).join(', '); };
 'xm ready';
+// Full product-details step: (on mockup-library page) save selection, then fill text, prices, publish live.
+window.__XP = { tee: [[['S','M','L','XL'],17.99],[['2XL'],19.99],[['3XL','4XL','5XL'],20.99]], jumper: [[['S','M','L','XL'],24.99],[['2XL'],26.99],[['3XL'],27.99],[['4XL'],30.99]] };
+window.__fin = async function (key, kind, dry) {
+  const W = ms => new Promise(r => setTimeout(r, ms));
+  let t0 = Date.now();
+  if (/mockup-library/.test(location.href)) {
+    const ss = [...document.querySelectorAll('*')].filter(e => e.children.length === 0 && e.textContent.trim() === 'Save selection').pop();
+    if (!ss) return 'ERR no Save selection';
+    (ss.closest('button') || ss).click();
+    while (!/product-details/.test(location.href) && Date.now() - t0 < 25000) await W(500);
+  }
+  if (!/product-details/.test(location.href)) return 'ERR not on details ' + location.href;
+  window.__LT = null;
+  const r1 = await window.__pd(key, { dry: true, keepShip: true });
+  const r2 = await window.__setPrices(window.__XP[kind]);
+  const hide = window.__box('Hide in store'); if (hide && hide.getAttribute('aria-checked') === 'true') { hide.click(); await W(500); }
+  const bx = window.__boxes();
+  if (dry || /false|missing/.test(bx.replace('Hide in store:false', ''))) return 'STOP ' + r1 + ' | ' + r2 + ' | ' + bx;
+  [...document.querySelectorAll('button')].find(b => b.offsetParent && b.textContent.trim() === 'Publish').click();
+  await W(3000);
+  const d = [...document.querySelectorAll('[role=dialog],pfy-dialog,.modal')].filter(e => e.offsetParent).pop();
+  const cf = d && [...d.querySelectorAll('button')].find(b => b.textContent.trim() === 'Confirm'); if (cf) cf.click();
+  t0 = Date.now(); while (!/store\/products/.test(location.href) && Date.now() - t0 < 20000) await W(500);
+  return r1 + ' | ' + r2 + ' | ' + bx + ' | ' + location.pathname;
+};
