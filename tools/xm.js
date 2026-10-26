@@ -32,7 +32,9 @@ window.__fin = async function (key, kind, dry) {
   const W = ms => new Promise(r => setTimeout(r, ms));
   let t0 = Date.now();
   if (/mockup-library/.test(location.href)) {
-    const ss = [...document.querySelectorAll('*')].filter(e => e.children.length === 0 && e.textContent.trim() === 'Save selection').pop();
+    const fs = () => [...document.querySelectorAll('*')].filter(e => e.children.length === 0 && e.textContent.trim() === 'Save selection').pop();
+    while (!fs() && Date.now() - t0 < 20000) await W(500); await W(1500); t0 = Date.now();
+    const ss = fs();
     if (!ss) return 'ERR no Save selection';
     (ss.closest('button') || ss).click();
     while (!/product-details/.test(location.href) && Date.now() - t0 < 25000) await W(500);
