@@ -1,5 +1,5 @@
 // Run in the Etsy listing editor: put the Brad worn image FIRST, keep existing photos after it (size chart stays last).
-window.__eb = async function (key, dry) {
+window.__eb = async function (key, dry, ord) {
   const sl = ms => new Promise(r => setTimeout(r, ms));
   for (let i = 0; i < 30 && !document.querySelector('.le-media-grid__item[id]'); i++) await sl(500);
   const idb = () => new Promise((res, rej) => { const q = indexedDB.open('bradxm', 1); q.onupgradeneeded = () => q.result.createObjectStore('img'); q.onsuccess = () => res(q.result); q.onerror = rej; });
@@ -19,12 +19,14 @@ window.__eb = async function (key, dry) {
   const del = () => vis().find(b => b.classList.contains('wt-btn--icon') && !b.getAttribute('aria-label') && !b.innerText.trim());
   let n = 0; while (thumbs() > 0 && n < 25) { del().click(); await sl(900); n++; }
   const done = vis().find(b => b.innerText.trim() === 'Done'); if (done) done.click(); await sl(800);
-  const files = [brad, ...old];
+  const o2 = ord ? ord.map(i => old[i]) : old; const files = [brad, ...o2];
   const inp = document.querySelector('input[type=file]'); const dt = new DataTransfer(); files.forEach(f => dt.items.add(f)); inp.files = dt.files; inp.dispatchEvent(new Event('change', { bubbles: true }));
   let g = 0; for (let i = 0; i < 60; i++) { await sl(1000); g = document.querySelectorAll('.le-media-grid__item[id]').length; if (g >= files.length) break; }
   await sl(2500);
   const res = key + ' old ' + oldN + ' deleted ' + n + ' up ' + files.length + ' grid ' + g;
   if (g !== files.length) return res + ' | NOT SAVED';
-  window.__ebReady = res; return res + ' | READY (click Publish changes)';
+  const pub = [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Publish changes'); if (!pub) return res + ' | no Publish button';
+  pub.click(); for (let i = 0; i < 20 && !location.href.includes('/tools/listings'); i++) await sl(700);
+  return res + ' | ' + (location.href.includes('/tools/listings') ? 'SAVED' : 'NOT SAVED ' + location.href);
 };
 'eb ready';
