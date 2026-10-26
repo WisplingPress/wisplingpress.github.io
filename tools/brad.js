@@ -21,7 +21,7 @@ window.__comp = async function (flowSrc, file, kind, opt = {}) {
   const p = document.createElement('canvas'); p.width = Math.round(pw); p.height = Math.round(ph); const px = p.getContext('2d');
   px.drawImage(pr, 0, 0, p.width, p.height);
   // fabric shading: soft-light the garment luminance into the print, keep print alpha
-  px.globalCompositeOperation = 'source-atop'; px.globalAlpha = 0.55; px.filter = 'grayscale(1) contrast(1.6) brightness(2.4)';
+  px.globalCompositeOperation = 'source-atop'; px.globalAlpha = 0.35; px.filter = 'grayscale(1) contrast(1.3) brightness(3.4)';
   px.globalCompositeOperation = 'multiply'; px.drawImage(im, cx - pw / 2, top, pw, ph, 0, 0, p.width, p.height);
   px.filter = 'none'; px.globalAlpha = 1; px.globalCompositeOperation = 'destination-in'; px.drawImage(pr, 0, 0, p.width, p.height);
   x.globalAlpha = 0.94; x.drawImage(p, Math.round(cx - pw / 2), Math.round(top)); x.globalAlpha = 1;
