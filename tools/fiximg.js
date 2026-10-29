@@ -75,8 +75,8 @@
       const t = L.t;
       if (/help of a|claude|anthropic/i.test(t)) { notes.push('erased AI line'); continue; }
       if (/big print on the back/i.test(t)) { const s = fitDraw(ctx, 'FxSC', 'The big print on the back  ·  Printed to order in the UK', 'The big print on the back  ·  Printed to order', L, ink); notes.push('back-print line ' + s); continue; }
-      if (/wispling/i.test(t) && dark) { const s = fitDraw(ctx, 'FxIt', 'by Wispling Press  ·  Printed to order in the UK', 'by Wispling Press  ·  Printed to order', L, ink); notes.push('footer ' + s); continue; }
-      if (/wispling/i.test(t)) { const s = fitDraw(ctx, 'FxSC', 'Wispling Press  ·  printed to order in the UK', 'Wispling Press  ·  printed to order', L, ink); notes.push('card footer ' + s); continue; }
+      if (/ispl|wispli/i.test(t) && dark) { const s = fitDraw(ctx, 'FxIt', 'by Wispling Press  ·  Printed to order in the UK', 'by Wispling Press  ·  Printed to order', L, ink); notes.push('footer ' + s); continue; }
+      if (/ispl|wispli/i.test(t)) { const s = fitDraw(ctx, 'FxSC', 'Wispling Press  ·  printed to order in the UK', 'Wispling Press  ·  printed to order', L, ink); notes.push('card footer ' + s); continue; }
       notes.push('ERASED UNKNOWN: ' + t);
     }
     const out = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.93));
