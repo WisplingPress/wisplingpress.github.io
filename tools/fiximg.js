@@ -84,13 +84,14 @@
   };
   // preview a patched image on top of the page (for checking)
   S.preview = async (url) => { const r = await S.patch(url); if (!r.blob) return r.action + ' ' + r.notes; let d = document.getElementById('__fxprev'); if (!d) { d = document.createElement('div'); d.id = '__fxprev'; d.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#fff;overflow:auto'; document.body.appendChild(d); } const u = URL.createObjectURL(r.blob); d.innerHTML = `<img src="${u}" style="width:100%">`; return r.action + ' ' + r.notes + ' | ' + JSON.stringify(r.lines); };
-  S.listing = async (badIdx, dry) => {
+  S.listing = async (badIdx, dry, drop = []) => {
     await S.init();
     for (let i = 0; i < 30 && !document.querySelector('.le-media-grid__item[id]'); i++) await sl(500);
     const imgs = [...document.querySelectorAll('.le-media-grid__item[id] img')].map(i => i.src.replace(/il_[0-9a-zA-Z]+(?=\.\d+_)/, 'il_fullxfull'));
     if (!imgs.length) return 'ERR no photos';
     const files = []; const rep = [];
     for (let i = 0; i < imgs.length; i++) {
+      if (drop.includes(i)) { rep.push(i + ':dropped'); continue; }
       if (badIdx.includes(i)) {
         const r = await S.patch(imgs[i]); rep.push(i + ':' + r.action + (r.notes ? '(' + r.notes + ')' : ''));
         if (r.action === 'drop') continue;
@@ -105,7 +106,8 @@
     const vis = () => [...document.querySelectorAll('[role=dialog] button')].filter(b => b.offsetParent);
     const thumbs = () => vis().filter(b => b.className.startsWith('le-media-grid__item')).length;
     const del = () => vis().find(b => b.classList.contains('wt-btn--icon') && !b.getAttribute('aria-label') && !b.innerText.trim());
-    let n = 0; while (thumbs() > 0 && n < 25) { const d = del(); if (!d) break; d.click(); await sl(900); n++; }
+    let n = 0; for (let k = 0; thumbs() > 0 && k < 60; k++) { const d = del(); if (!d) { await sl(500); continue; } d.click(); await sl(900); n++; }
+    if (thumbs() > 0) { const dn = vis().find(b => b.innerText.trim() === 'Done'); return rep.join(' | ') + ' | ERR could not delete all photos (left ' + thumbs() + '), nothing uploaded, NOT SAVED'; }
     const done = vis().find(b => b.innerText.trim() === 'Done'); if (done) done.click(); await sl(800);
     const inp = document.querySelector('input[type=file]'); const dt = new DataTransfer(); files.forEach(f => dt.items.add(f)); inp.files = dt.files; inp.dispatchEvent(new Event('change', { bubbles: true }));
     let g = 0; for (let i = 0; i < 60; i++) { await sl(1000); g = document.querySelectorAll('.le-media-grid__item[id]').length; if (g >= files.length) break; }
