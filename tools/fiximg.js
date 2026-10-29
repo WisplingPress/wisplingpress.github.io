@@ -67,7 +67,11 @@
       const B = { x0: L.x0 - pad * 2, y0: L.y0 - pad, x1: L.x1 + pad * 2, y1: L.y1 + pad };
       const bg = bgColour(ctx, B.x0, B.y0, B.x1, B.y1); const ink = inkColour(ctx, L.x0, L.y0, L.x1, L.y1, bg);
       const dark = lum(...bg) < 110;
-      ctx.fillStyle = `rgb(${bg.join(',')})`; ctx.fillRect(B.x0, B.y0, B.x1 - B.x0, B.y1 - B.y0);
+      // soft-edged cover: solid in the middle, feathered at the edges so no box shows
+      { const f = Math.max(8, pad * 1.6); const m = document.createElement('canvas'); m.width = cv.width; m.height = cv.height; const mc = m.getContext('2d');
+        mc.fillStyle = `rgb(${bg.join(',')})`; mc.fillRect(B.x0 - f * 0.5, B.y0 - f * 0.3, B.x1 - B.x0 + f, B.y1 - B.y0 + f * 0.6);
+        ctx.save(); ctx.filter = `blur(${f * 0.6}px)`; ctx.drawImage(m, 0, 0); ctx.restore();
+        ctx.fillStyle = `rgb(${bg.join(',')})`; ctx.fillRect(B.x0 + f * 0.3, B.y0 + 1, B.x1 - B.x0 - f * 0.6, B.y1 - B.y0 - 2); }
       const t = L.t;
       if (/help of a|claude|anthropic/i.test(t)) { notes.push('erased AI line'); continue; }
       if (/big print on the back/i.test(t)) { const s = fitDraw(ctx, 'FxSC', 'The big print on the back  ·  Printed to order in the UK', 'The big print on the back  ·  Printed to order', L, ink); notes.push('back-print line ' + s); continue; }
