@@ -1,0 +1,38 @@
+{%- comment -%} Wispling Press: gentle snow showers that come and go (added 9 Nov 2026). Skipped for reduced-motion users. {%- endcomment -%}
+<canvas id="wp-snow" aria-hidden="true" style="position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483000;display:block"></canvas>
+<script>
+(function () {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var c = document.getElementById('wp-snow'); if (!c || !c.getContext) return;
+  var ctx = c.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2), W = 0, H = 0;
+  var flakes = [], snowing = false, showerEnd = 0, raf = 0, last = 0;
+  var SHOWER_MS = 22000, GAP_MS = 40000, FIRST_MS = 1500;
+  function size() { W = window.innerWidth; H = window.innerHeight; c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  function maxFlakes() { return Math.min(140, Math.round(W / 10)); }
+  function flake(top) {
+    var r = 1 + Math.random() * 2.8;
+    return { x: Math.random() * W, y: top ? -10 - Math.random() * 40 : Math.random() * H, r: r,
+             vy: 22 + r * 14 + Math.random() * 18, sway: 10 + Math.random() * 22, ph: Math.random() * 6.28, sp: 0.4 + Math.random() * 0.9, a: 0.5 + Math.random() * 0.45 };
+  }
+  function frame(t) {
+    var dt = Math.min(0.05, (t - (last || t)) / 1000); last = t;
+    ctx.clearRect(0, 0, W, H);
+    if (snowing && t > showerEnd) snowing = false;
+    if (snowing && flakes.length < maxFlakes() && Math.random() < 0.6) flakes.push(flake(true));
+    for (var i = flakes.length - 1; i >= 0; i--) {
+      var f = flakes[i]; f.ph += f.sp * dt; f.y += f.vy * dt; f.x += Math.sin(f.ph) * f.sway * dt;
+      if (f.y > H + 6) { if (snowing) { flakes[i] = flake(true); } else { flakes.splice(i, 1); } continue; }
+      ctx.globalAlpha = f.a; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.2832); ctx.fillStyle = '#ffffff'; ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    if (snowing || flakes.length) { raf = requestAnimationFrame(frame); } else { raf = 0; last = 0; ctx.clearRect(0, 0, W, H); setTimeout(start, GAP_MS); }
+  }
+  function start() {
+    if (document.hidden) { setTimeout(start, 5000); return; }
+    snowing = true; showerEnd = performance.now() + SHOWER_MS;
+    if (!raf) raf = requestAnimationFrame(frame);
+  }
+  size(); window.addEventListener('resize', size, { passive: true });
+  setTimeout(start, FIRST_MS);
+})();
+</script>
